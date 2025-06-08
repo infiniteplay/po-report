@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiniFi Purchase Order Dashboard - Detailed Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #1a1a1a;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #1a1a1a;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        
+        .btn-outline:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+        
+        .controls {
+            background: white;
+            padding: 16px 32px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .controls-left {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .date-filter input {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding: 8px 16px 8px 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            width: 300px;
+        }
+        
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .summary-stats {
+            background: white;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e9ecef;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+        
+        .stat-card {
+            text-align: left;
+        }
+        
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .stat-card .label {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .table-section {
+            background: white;
+            padding: 0 32px 32px 32px;
+        }
+        
+        .table-container {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+        }
+        
+        th {
+            background: #f8f9fa;
+            color: #495057;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            border-bottom: 1px solid #e9ecef;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: middle;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+            display: inline-block;
+        }
+        
+        .status-delivered { 
+            background: #d4edda; 
+            color: #155724; 
+        }
+        
+        .status-fulfilled { 
+            background: #cce7ff; 
+            color: #004085; 
+        }
+        
+        .status-processed { 
+            background: #fff3cd; 
+            color: #856404; 
+        }
+        
+        .status-rejected { 
+            background: #f8d7da; 
+            color: #721c24; 
+        }
+        
+        .status-unmapped {
+            background: #e2e3e5;
+            color: #6c757d;
+        }
+        
+        .status-duplicate {
+            background: #ffeaa7;
+            color: #6c5ce7;
+        }
+        
+        .account-name {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .customer-name {
+            color: #495057;
+            font-size: 13px;
+        }
+        
+        .warehouse-name {
+            color: #6c757d;
+            font-size: 13px;
+        }
+        
+        .metric-number {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .tat-good { color: #28a745; }
+        .tat-moderate { color: #ffc107; }
+        .tat-poor { color: #dc3545; }
+        
+        .success-rate {
+            font-weight: 600;
+        }
+        
+        .rate-excellent { color: #28a745; }
+        .rate-good { color: #17a2b8; }
+        .rate-average { color: #ffc107; }
+        .rate-poor { color: #dc3545; }
+        
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 0;
+            }
+            
+            .header, .controls, .summary-stats, .table-section {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .search-box input {
+                width: 200px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .controls-left {
+                justify-content: space-between;
+            }
+            
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Purchase Order Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="window.print()">Print Report</button>
+                <button class="btn" onclick="exportToCSV()">Export CSV</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="controls-left">
+                <div class="date-filter">
+                    <span>Date Range:</span>
+                    <input type="date" id="fromDate" value="2025-01-01">
+                    <span>to</span>
+                    <input type="date" id="toDate" value="2025-06-08">
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by Account, Customer, or Warehouse...">
+            </div>
+        </div>
+        
+        <div class="summary-stats">
+            <div class="stat-card">
+                <div class="number" id="totalPOs">1,247</div>
+                <div class="label">Total POs</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="processedPOs">1,189</div>
+                <div class="label">Processed POs</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="deliveredPOs">1,089</div>
+                <div class="label">Delivered POs</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="avgTAT">4.2 days</div>
+                <div class="label">Average TAT</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="fulfillmentRate">87.3%</div>
+                <div class="label">Fulfillment Rate</div>
+            </div>
+        </div>
+        
+        <div class="table-section">
+            <div class="table-container">
+                <table id="poTable">
+                    <thead>
+                        <tr>
+                            <th>Account Name</th>
+                            <th>Customer Name</th>
+                            <th>Warehouse Name</th>
+                            <th>Total POs</th>
+                            <th>Processed</th>
+                            <th>Rejected</th>
+                            <th>Fulfilled</th>
+                            <th>Delivered</th>
+                            <th>Avg TAT</th>
+                            <th>Expired</th>
+                            <th>Success Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data based on the FiniFi system structure
+        const poData = [
+            {
+                accountName: "Walmart",
+                customerName: "Cash N Carry - Jalandhar",
+                warehouseName: "SAWHNEY AGENCIES",
+                totalPOs: 45,
+                processed: 42,
+                rejected: 1,
+                fulfilled: 38,
+                delivered: 35,
+                avgTAT: 3.2,
+                expired: 2
+            },
+            {
+                accountName: "BigBasket",
+                customerName: "bigbasket Warehouse (BBPU)",
+                warehouseName: "SAKSHI AGENCY - PUNE",
+                totalPOs: 67,
+                processed: 64,
+                rejected: 2,
+                fulfilled: 58,
+                delivered: 55,
+                avgTAT: 4.1,
+                expired: 1
+            },
+            {
+                accountName: "Zepto",
+                customerName: "Zepto - MEDAK, Telangana",
+                warehouseName: "ISTORE DIRECT TRADING",
+                totalPOs: 23,
+                processed: 22,
+                rejected: 0,
+                fulfilled: 20,
+                delivered: 18,
+                avgTAT: 2.8,
+                expired: 1
+            },
+            {
+                accountName: "DMart",
+                customerName: "SND Warehousing Complex - 1",
+                warehouseName: "SMS Marketing (Chennai)",
+                totalPOs: 89,
+                processed: 85,
+                rejected: 3,
+                fulfilled: 78,
+                delivered: 72,
+                avgTAT: 5.2,
+                expired: 4
+            },
+            {
+                accountName: "Blinkit",
+                customerName: "Warehouse No 1. Sahib warehousing",
+                warehouseName: "ASHISH MARKETING-MUM",
+                totalPOs: 156,
+                processed: 148,
+                rejected: 5,
+                fulfilled: 135,
+                delivered: 128,
+                avgTAT: 3.8,
+                expired: 3
+            },
+            {
+                accountName: "Swiggy Instamart",
+                customerName: "SCOOTSY LOGISTICS PRIVATE",
+                warehouseName: "ALPINO HEALTH FOODS",
+                totalPOs: 34,
+                processed: 32,
+                rejected: 1,
+                fulfilled: 29,
+                delivered: 26,
+                avgTAT: 4.5,
+                expired: 1
+            },
+            {
+                accountName: "Dunzo",
+                customerName: "PUN-DRY-MH2-KOREGAON",
+                warehouseName: "HW WELLNESS SOLUTION",
+                totalPOs: 12,
+                processed: 11,
+                rejected: 0,
+                fulfilled: 10,
+                delivered: 9,
+                avgTAT: 3.1,
+                expired: 1
+            },
+            {
+                accountName: "Walmart",
+                customerName: "Cash N Carry - Amristar",
+                warehouseName: "SAWHNEY AGENCIES",
+                totalPOs: 78,
+                processed: 74,
+                rejected: 2,
+                fulfilled: 68,
+                delivered: 65,
+                avgTAT: 3.6,
+                expired: 2
+            },
+            {
+                accountName: "BigBasket",
+                customerName: "BIGBASKET-Jaywant Warehouse",
+                warehouseName: "SAKSHI AGENCY-PUNE",
+                totalPOs: 123,
+                processed: 118,
+                rejected: 4,
+                fulfilled: 108,
+                delivered: 102,
+                avgTAT: 4.3,
+                expired: 3
+            },
+            {
+                accountName: "Metro Cash & Carry",
+                customerName: "Kanjur Marg FC Avenue E-Commerce",
+                warehouseName: "ASHISH MARKETING Sub D",
+                totalPOs: 67,
+                processed: 63,
+                rejected: 2,
+                fulfilled: 58,
+                delivered: 54,
+                avgTAT: 4.8,
+                expired: 2
+            },
+            {
+                accountName: "Reliance Fresh",
+                customerName: "BLR-Nelamangala-DRYMH",
+                warehouseName: "Business Process Matrix P",
+                totalPOs: 45,
+                processed: 42,
+                rejected: 1,
+                fulfilled: 38,
+                delivered: 36,
+                avgTAT: 3.9,
+                expired: 1
+            },
+            {
+                accountName: "Spencer's",
+                customerName: "HANDS ON TRADES PRIVATE",
+                warehouseName: "ZEA MAIZE PVT LTD",
+                totalPOs: 29,
+                processed: 27,
+                rejected: 1,
+                fulfilled: 24,
+                delivered: 22,
+                avgTAT: 5.1,
+                expired: 2
+            }
+        ];
+
+        function getTATClass(tat) {
+            if (tat <= 3) return 'tat-good';
+            if (tat <= 5) return 'tat-moderate';
+            return 'tat-poor';
+        }
+
+        function calculateSuccessRate(delivered, total) {
+            return ((delivered / total) * 100).toFixed(1);
+        }
+
+        function getSuccessRateClass(rate) {
+            if (rate >= 90) return 'rate-excellent';
+            if (rate >= 80) return 'rate-good';
+            if (rate >= 70) return 'rate-average';
+            return 'rate-poor';
+        }
+
+        function getStatusBadge(type, value) {
+            const badges = {
+                processed: 'status-processed',
+                rejected: 'status-rejected',
+                fulfilled: 'status-fulfilled',
+                delivered: 'status-delivered',
+                expired: 'status-rejected'
+            };
+            return `<span class="status-badge ${badges[type]}">${value}</span>`;
+        }
+
+        function populateTable(data = poData) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(row => {
+                const successRate = calculateSuccessRate(row.delivered, row.totalPOs);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="account-name">${row.accountName}</td>
+                    <td class="customer-name">${row.customerName}</td>
+                    <td class="warehouse-name">${row.warehouseName}</td>
+                    <td class="metric-number">${row.totalPOs}</td>
+                    <td>${getStatusBadge('processed', row.processed)}</td>
+                    <td>${getStatusBadge('rejected', row.rejected)}</td>
+                    <td>${getStatusBadge('fulfilled', row.fulfilled)}</td>
+                    <td>${getStatusBadge('delivered', row.delivered)}</td>
+                    <td class="metric-number ${getTATClass(row.avgTAT)}">${row.avgTAT} days</td>
+                    <td>${getStatusBadge('expired', row.expired)}</td>
+                    <td class="success-rate ${getSuccessRateClass(successRate)}">${successRate}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateSummaryStats() {
+            const totalPOs = poData.reduce((sum, row) => sum + row.totalPOs, 0);
+            const totalProcessed = poData.reduce((sum, row) => sum + row.processed, 0);
+            const totalDelivered = poData.reduce((sum, row) => sum + row.delivered, 0);
+            const avgTAT = (poData.reduce((sum, row) => sum + row.avgTAT, 0) / poData.length).toFixed(1);
+            const fulfillmentRate = ((totalDelivered / totalPOs) * 100).toFixed(1);
+            
+            document.getElementById('totalPOs').textContent = totalPOs.toLocaleString();
+            document.getElementById('processedPOs').textContent = totalProcessed.toLocaleString();
+            document.getElementById('deliveredPOs').textContent = totalDelivered.toLocaleString();
+            document.getElementById('avgTAT').textContent = avgTAT + ' days';
+            document.getElementById('fulfillmentRate').textContent = fulfillmentRate + '%';
+        }
+
+        function filterData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filteredData = poData.filter(row => 
+                row.accountName.toLowerCase().includes(searchTerm) ||
+                row.customerName.toLowerCase().includes(searchTerm) ||
+                row.warehouseName.toLowerCase().includes(searchTerm)
+            );
+            populateTable(filteredData);
+        }
+
+        function exportToCSV() {
+            const headers = ['Account Name', 'Customer Name', 'Warehouse Name', 'Total POs', 'Processed', 'Rejected', 'Fulfilled', 'Delivered', 'Avg TAT (Days)', 'Expired', 'Success Rate'];
+            
+            let csvContent = headers.join(',') + '\n';
+            
+            poData.forEach(row => {
+                const successRate = calculateSuccessRate(row.delivered, row.totalPOs);
+                const csvRow = [
+                    `"${row.accountName}"`,
+                    `"${row.customerName}"`,
+                    `"${row.warehouseName}"`,
+                    row.totalPOs,
+                    row.processed,
+                    row.rejected,
+                    row.fulfilled,
+                    row.delivered,
+                    row.avgTAT,
+                    row.expired,
+                    successRate + '%'
+                ].join(',');
+                csvContent += csvRow + '\n';
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `FiniFi_PO_Dashboard_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterData);
+        
+        // Initialize the dashboard
+        populateTable();
+        updateSummaryStats();
+    </script>
+</body>
+</html>
